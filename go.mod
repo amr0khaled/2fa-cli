@@ -1,3 +1,3 @@
-module amr.0x/2fa-cli
+module amr.0x/totp-gen
 
 go 1.25.3
