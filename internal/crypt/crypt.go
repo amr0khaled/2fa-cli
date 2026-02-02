@@ -27,7 +27,7 @@ type Sha512 struct {
 	BaseHash
 }
 
-func (base *BaseHash) GenSecret() ([]byte, error) {
+func (base BaseHash) GenSecret() ([]byte, error) {
 	bytes := make([]byte, base.Size)
 	_, err := rand.Read(bytes)
 	if err != nil {
@@ -37,12 +37,11 @@ func (base *BaseHash) GenSecret() ([]byte, error) {
 }
 
 func NewSha1() Sha1 {
-	s := Sha1{
+	return Sha1{
 		BaseHash: BaseHash{
 			Size: 20,
 		},
 	}
-	return s
 }
 func NewSha256() Sha256 {
 	return Sha256{
@@ -59,27 +58,27 @@ func NewSha512() Sha512 {
 	}
 }
 
-func (*Sha1) Hmac(data []byte, key []byte) []byte {
+func (Sha1) Hmac(data []byte, key []byte) []byte {
 	cipher := hmac.New(sha1.New, key)
 	cipher.Write(data)
 	return cipher.Sum(nil)
 }
-func (*Sha256) Hmac(data []byte, key []byte) []byte {
+func (Sha256) Hmac(data []byte, key []byte) []byte {
 	cipher := hmac.New(sha256.New, key)
 	cipher.Write(data)
 	return cipher.Sum(nil)
 }
-func (*Sha512) Hmac(data []byte, key []byte) []byte {
+func (Sha512) Hmac(data []byte, key []byte) []byte {
 	cipher := hmac.New(sha512.New, key)
 	cipher.Write(data)
 	return cipher.Sum(nil)
 }
 
 // TODO: For CLI adaption
-var hashes = map[string]HashMethod{
-	"sha1":   &Sha1{},
-	"sha256": &Sha256{},
-	"sha512": &Sha512{},
+var Hashes = map[string]HashMethod{
+	"sha1":   NewSha1(),
+	"sha256": NewSha256(),
+	"sha512": NewSha512(),
 }
 
 func RandomBytes(n int) ([]byte, error) {
