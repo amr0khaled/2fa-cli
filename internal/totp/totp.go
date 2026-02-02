@@ -9,11 +9,7 @@ import (
 	"strconv"
 	"time"
 
-<<<<<<< Updated upstream
-	c "amr.0x/totp-gen/internal/crypt"
-=======
-	c "amr.0x/2fa-cli/internal/crypt"
->>>>>>> Stashed changes
+	"amr.0x/2fa-cli/internal/crypt"
 )
 
 const T0 = 0
@@ -44,10 +40,10 @@ func prepareOTP(num uint32, digit int) string {
 	return otp
 }
 
-var lenToHash = map[int]c.HashMethod{
-	40:  &c.Sha1{},
-	64:  &c.Sha256{},
-	128: &c.Sha512{},
+var lenToHash = map[int]crypt.HashMethod{
+	40:  &crypt.Sha1{},
+	64:  &crypt.Sha256{},
+	128: &crypt.Sha512{},
 }
 
 func equalityCheck(inputOTP string, realOTP string) bool {
@@ -77,19 +73,13 @@ func Validate(otp string, secret string) (bool, error) {
 	}
 	return equalityCheck(otp, string(generatedOTP)), nil
 }
-func GenerateOTP(otp *string, hash c.HashMethod, secret string, digit int) error {
+func GenerateOTP(otp *string, hash crypt.HashMethod, secret string, digit int) error {
 	secretHex, err := hexStr2Bytes(secret)
 	if err != nil {
 		return err
 	}
-<<<<<<< Updated upstream
-	date := time.Date(1970, time.January, 1, 0, 0, 59, 0, time.UTC)
-
-	currentTime := date.Unix()
-=======
 
 	currentTime := time.Now().UTC().Unix()
->>>>>>> Stashed changes
 	time := (currentTime - T0) / Interval
 	timeStr := strconv.FormatInt(time, 16)
 	for len(timeStr) < 16 {
