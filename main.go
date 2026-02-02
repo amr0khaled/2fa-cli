@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/base32"
+<<<<<<< Updated upstream
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -14,24 +15,17 @@ import (
 
 	c "amr.0x/totp-gen/internal/crypt"
 	o "amr.0x/totp-gen/internal/totp"
+=======
+	"encoding/hex"
+	"fmt"
+
+	"os"
+
+	"amr.0x/2fa-cli/internal/crypt"
+	"amr.0x/2fa-cli/internal/totp"
+>>>>>>> Stashed changes
 )
 
-func hashKey(key string) []byte {
-	data, err := hex.DecodeString(key)
-	if err != nil {
-		fmt.Println("Error hashKey")
-		os.Exit(-1)
-	}
-	return data
-}
-func dt(hmac []byte) uint32 {
-	lastIndex := len(hmac) - 1
-	lowerByte := hmac[lastIndex]
-	lowerNibble := lowerByte & 0xf
-	offset := lowerNibble
-	code := binary.BigEndian.Uint32(hmac[offset : offset+4])
-	return code & 0x7FFFFFFF
-}
 func hexStr2Bytes(hexStr string) ([]byte, error) {
 	if len(hexStr)%2 != 0 {
 		hexStr = "0" + hexStr
@@ -40,6 +34,7 @@ func hexStr2Bytes(hexStr string) ([]byte, error) {
 }
 
 func main() {
+<<<<<<< Updated upstream
 	// key := crypt.Gen()
 	// key, err := hexStr2Bytes("3132333435363738393031323334353637383930" + "313233343536373839303132")
 	// if err != nil {
@@ -81,12 +76,16 @@ func main() {
 
 	// fmt.Println("result", result)
 	hash := c.NewSha1()
+=======
+	hash := crypt.NewSha1()
+>>>>>>> Stashed changes
 	secretBytes, _ := hash.GenSecret()
 	secret := hex.EncodeToString([]byte(secretBytes))
 	secretBase32 := base32.StdEncoding.EncodeToString(secretBytes)
 	fmt.Println("base32", secretBase32)
 	secretBase32 = "MQDVCSI5MQO4XBPJEB6S7LKCYMPWTQHF"
 	fmt.Println("base32", secretBase32)
+<<<<<<< Updated upstream
 	secretHex, _ := base32.StdEncoding.DecodeString(secretBase32)
 	secret = hex.EncodeToString(secretHex)
 
@@ -99,14 +98,33 @@ func main() {
 	err := o.GenerateOTP(&otp, &hash, secret, 8)
 	if err != nil {
 		//	fmt.Println("Error", err)
+=======
+
+	secretHex, _ := base32.StdEncoding.DecodeString(secretBase32)
+	secret = hex.EncodeToString(secretHex)
+	fmt.Println("secret", secret)
+
+	var otp string
+	err := totp.GenerateOTP(&otp, &hash, secret, 6)
+	if err != nil {
+		fmt.Println("Error", err)
+>>>>>>> Stashed changes
 		os.Exit(-1)
 	}
 	fmt.Println("Geenrated", otp)
 
+<<<<<<< Updated upstream
 	if ok, _ := o.Validate(otp, secret); ok {
 		//	fmt.Println("Valid")
 	} else {
 		//	fmt.Println("Not Valid")
 	}
 
+=======
+	if ok, _ := totp.Validate(otp, secret); ok {
+		fmt.Println("Valid")
+	} else {
+		fmt.Println("Not Valid")
+	}
+>>>>>>> Stashed changes
 }

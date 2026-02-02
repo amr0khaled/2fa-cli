@@ -9,7 +9,11 @@ import (
 	"strconv"
 	"time"
 
+<<<<<<< Updated upstream
 	c "amr.0x/totp-gen/internal/crypt"
+=======
+	c "amr.0x/2fa-cli/internal/crypt"
+>>>>>>> Stashed changes
 )
 
 const T0 = 0
@@ -78,9 +82,14 @@ func GenerateOTP(otp *string, hash c.HashMethod, secret string, digit int) error
 	if err != nil {
 		return err
 	}
+<<<<<<< Updated upstream
 	date := time.Date(1970, time.January, 1, 0, 0, 59, 0, time.UTC)
 
 	currentTime := date.Unix()
+=======
+
+	currentTime := time.Now().UTC().Unix()
+>>>>>>> Stashed changes
 	time := (currentTime - T0) / Interval
 	timeStr := strconv.FormatInt(time, 16)
 	for len(timeStr) < 16 {
