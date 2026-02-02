@@ -11,13 +11,6 @@ import (
 	"amr.0x/2fa-cli/internal/totp"
 )
 
-func hexStr2Bytes(hexStr string) ([]byte, error) {
-	if len(hexStr)%2 != 0 {
-		hexStr = "0" + hexStr
-	}
-	return hex.DecodeString(hexStr)
-}
-
 func main() {
 	hash := crypt.NewSha1()
 	secretBytes, _ := hash.GenSecret()
