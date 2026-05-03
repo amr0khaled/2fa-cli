@@ -1,49 +1,96 @@
 package main
 
 import (
-	// "encoding/base32"
-	// "encoding/hex"
-	// "fmt"
+	// c "amr.0x/2fa-cli/internal/cli"
+	// "github.com/alecthomas/kong"
+	"fmt"
+	"os"
 
-	// "os"
+	// "os/exec"
 
-	c "amr.0x/2fa-cli/internal/cli"
-	"github.com/alecthomas/kong"
-	// "amr.0x/2fa-cli/internal/crypt"
-	// "amr.0x/2fa-cli/internal/totp"
+	"amr.0x/2fa-cli/internal/res"
+	"github.com/ProtonMail/gopenpgp/v3/constants"
+	"github.com/ProtonMail/gopenpgp/v3/crypto"
+	"github.com/ProtonMail/gopenpgp/v3/profile"
 )
 
+func get(message string, value *string) {
+	fmt.Print(message)
+	fmt.Scanln(value)
+}
+
+const KEY_FILE = ".key"
+
+func createKey() *crypto.Key {
+	var name, email string
+	get("Name: ", &name)
+	get("Email: ", &email)
+
+	pgp := crypto.PGPWithProfile(profile.Default())
+
+	keyGen := pgp.KeyGeneration().AddUserId(name, email).New()
+	key, err := keyGen.GenerateKeyWithSecurity(constants.HighSecurity)
+	if err != nil {
+		fmt.Println("Key Gen Error", err)
+		os.Exit(-2)
+		return nil
+	}
+	armour, err := key.Armor()
+	if err != nil {
+		fmt.Println("Key Gen Error", err)
+		os.Exit(-2)
+		return nil
+	}
+	if ok, err := res.Exists(KEY_FILE); err != nil {
+		panic(err)
+	} else if !ok {
+		err := res.CreateFile(KEY_FILE)
+		if err != nil {
+			fmt.Println("Create key file error", err)
+			os.Exit(-2)
+			return nil
+		}
+	}
+	err = res.WriteFile(KEY_FILE, armour)
+	if err != nil {
+		fmt.Println("Write key error", err)
+		os.Exit(-2)
+		return nil
+	}
+	return key
+}
+func getKey() (*crypto.Key, error) {
+	var err error
+	if exists, err := res.Exists(KEY_FILE); err != nil {
+		return nil, err
+	} else if !exists {
+		return createKey(), nil
+	}
+	armoured, err := res.ReadFile(KEY_FILE)
+	if err != nil {
+		return nil, err
+	}
+	key, err := crypto.NewKeyFromArmored(*armoured)
+	if err != nil {
+		return nil, err
+	}
+	return key, nil
+}
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
 func main() {
-	var cli c.Cli
-	ctx := kong.Parse(&cli,
-		kong.Name("2fa-cli"))
-	err := ctx.Run(&cli)
-	ctx.FatalIfErrorf(err)
-	// config := *cli.GetConf()
-	// fmt.Println("config", config)
-	// hash := crypt.NewSha1()
-	// secretBytes, _ := hash.GenSecret()
-	// secret := hex.EncodeToString([]byte(secretBytes))
-	// secretBase32 := base32.StdEncoding.EncodeToString(secretBytes)
-	// fmt.Println("base32", secretBase32)
-	// secretBase32 = "MQDVCSI5MQO4XBPJEB6S7LKCYMPWTQHF"
-	// fmt.Println("base32", secretBase32)
-
-	// secretHex, _ := base32.StdEncoding.DecodeString(secretBase32)
-	// secret = hex.EncodeToString(secretHex)
-	// fmt.Println("secret", secret)
-
-	// var otp string
-	// err := totp.GenerateOTP(&otp, &hash, secret, 6)
-	// if err != nil {
-	// 	fmt.Println("Error", err)
-	// 	os.Exit(-1)
-	// }
-	// fmt.Println("Geenrated", otp)
-
-	// if ok, _ := totp.Validate(otp, secret); ok {
-	// 	fmt.Println("Valid")
-	// } else {
-	// 	fmt.Println("Not Valid")
-	// }
+	// var cli c.Cli
+	// ctx := kong.Parse(&cli,
+	// 	kong.Name("2fa-cli"))
+	// err := ctx.Run(&cli)
+	// ctx.FatalIfErrorf(err)
+	key, err := getKey()
+	check(err)
+	armour, err := key.Armor()
+	check(err)
+	fmt.Println("key", armour)
 }
