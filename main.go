@@ -70,7 +70,7 @@ func getKey() (*crypto.Key, error) {
 	if err != nil {
 		return nil, err
 	}
-	key, err := crypto.NewKeyFromArmored(*armoured)
+	key, err := crypto.NewKeyFromArmored(armoured)
 	if err != nil {
 		return nil, err
 	}
