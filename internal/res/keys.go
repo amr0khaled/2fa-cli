@@ -3,6 +3,7 @@ package res
 import (
 	"encoding/base32"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -150,6 +151,7 @@ func handleArmour(account *MfaAccount, iter *Iter[string]) {
 }
 
 func NewAccountFromFile(name string, content string) *MfaAccount {
+	fmt.Printf("%s\n", content)
 	lines := NewIter(strings.Split(content, "\n"))
 	triming := func(el string) string {
 		return strings.TrimSpace(el)
@@ -191,9 +193,14 @@ func (k *Key) GetRaw() []byte {
 var accounts []*MfaAccount
 
 func init() {
-	// keys := readKeys()
-	// for name, key := range keys {
-	// 	account := NewAccountFromFile(name, key.Content)
-	// 	accounts = append(accounts, account)
-	// }
+	if res == nil {
+		res = NewRes()
+	}
+	keys := readKeys()
+	for name, key := range keys {
+		account := NewAccountFromFile(name, key.Content)
+		accounts = append(accounts, account)
+	}
+	fmt.Printf("%+vss", accounts)
+
 }

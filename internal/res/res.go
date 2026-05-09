@@ -15,11 +15,22 @@ func check(err error) {
 	}
 }
 
-type Res struct{}
+type Res struct {
+	dir string
+}
+
+var res *Res = NewRes()
 
 const defaultDir = ".2fa/"
 
-var defaultPrefix string
+func NewRes() *Res {
+	home, _ := os.UserHomeDir()
+	defaultPrefix, _ := filepath.Abs(home + "/" + defaultDir)
+	fmt.Printf("%s\n", defaultPrefix)
+	return &Res{
+		dir: defaultPrefix,
+	}
+}
 
 func exists(path string) (bool, error) {
 	_, err := os.Stat(path)
@@ -44,7 +55,7 @@ func isDir(path string) (bool, error) {
 	return false, err
 }
 func Exists(path string) (bool, error) {
-	return exists(Join(defaultPrefix, path))
+	return exists(Join(res.dir, path))
 }
 
 func create(filename string) error {
@@ -70,7 +81,7 @@ func mkdir(dirnames ...string) error {
 	return nil
 }
 func CreateFile(filename string) error {
-	return create(Join(defaultPrefix, filename))
+	return create(Join(res.dir, filename))
 }
 
 func write(filename string, content string) error {
@@ -90,7 +101,7 @@ func write(filename string, content string) error {
 	return nil
 }
 func WriteFile(filename string, content string) error {
-	return write(Join(defaultPrefix, filename), content)
+	return write(Join(res.dir, filename), content)
 }
 func read(filename string) (string, error) {
 	var content string
@@ -110,7 +121,7 @@ func Join(paths ...string) string {
 	return strings.Join(append(path, paths...), "/")
 }
 func ReadFile(filenames ...string) (string, error) {
-	return read(Join(defaultPrefix, Join(filenames...)))
+	return read(Join(res.dir, Join(filenames...)))
 }
 func del(filename string) error {
 	if ok, err := exists(filename); ok && err == nil {
@@ -124,7 +135,7 @@ func del(filename string) error {
 	return nil
 }
 func DeleteFile(filename string) error {
-	return del(Join(defaultPrefix, filename))
+	return del(Join(res.dir, filename))
 }
 
 func extend(filename string, content string) error {
@@ -150,7 +161,7 @@ type KeyFile struct {
 
 func readKeys() map[string]KeyFile {
 	var keys map[string]KeyFile = map[string]KeyFile{}
-	filepath.WalkDir(defaultPrefix, func(path string, d fs.DirEntry, err error) error {
+	filepath.WalkDir(res.dir, func(path string, d fs.DirEntry, err error) error {
 		check(err)
 		if !d.IsDir() {
 			filename := filepath.Base(path)
@@ -166,7 +177,7 @@ func readKeys() map[string]KeyFile {
 					Content: content,
 				}
 			}
-			filerel, _ := strings.CutPrefix(path, defaultPrefix)
+			filerel, _ := strings.CutPrefix(path, res.dir+"/")
 			entry, _ := strings.CutSuffix(filerel, "/.key")
 			keys[entry] = file
 		}
@@ -176,9 +187,7 @@ func readKeys() map[string]KeyFile {
 }
 
 func init() {
-	home, _ := os.UserHomeDir()
-	defaultPrefix = home + "/" + defaultDir
-	var exists, err = isDir(defaultPrefix)
+	var exists, err = isDir(res.dir)
 	if err != nil {
 		panic(err)
 	}
@@ -187,8 +196,8 @@ func init() {
 		return
 	}
 	fmt.Println("dir doesn't exists")
-	fmt.Println("creating new one", defaultPrefix)
-	err = mkdir(defaultPrefix)
+	fmt.Println("creating new one", res.dir)
+	err = mkdir(res.dir)
 	if err != nil {
 		panic(err)
 	}

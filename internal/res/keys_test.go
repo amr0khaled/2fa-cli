@@ -53,7 +53,7 @@ email: test@test.com
 armour: JBSWY3DP
 digits: 8
 `
-	mkdir(defaultPrefix, name)
+	mkdir(res.dir, name)
 	WriteFile(Join(name, ".key"), content)
 
 	m := readKeys()
