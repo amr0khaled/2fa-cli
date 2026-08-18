@@ -2,7 +2,6 @@ package res
 
 import (
 	"errors"
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -26,7 +25,6 @@ const defaultDir = ".2fa/"
 func NewRes() *Res {
 	home, _ := os.UserHomeDir()
 	defaultPrefix, _ := filepath.Abs(home + "/" + defaultDir)
-	fmt.Printf("%s\n", defaultPrefix)
 	return &Res{
 		dir: defaultPrefix,
 	}
@@ -43,6 +41,7 @@ func exists(path string) (bool, error) {
 	}
 	return false, err
 }
+
 func isDir(path string) (bool, error) {
 	info, err := os.Stat(path)
 
@@ -54,6 +53,7 @@ func isDir(path string) (bool, error) {
 	}
 	return false, err
 }
+
 func Exists(path string) (bool, error) {
 	return exists(Join(res.dir, path))
 }
@@ -69,9 +69,10 @@ func create(filename string) error {
 	}
 	return nil
 }
+
 func mkdir(dirnames ...string) error {
 	if ok, err := isDir(Join(dirnames...)); !ok && err == nil {
-		err := os.MkdirAll(Join(dirnames...), 0755)
+		err := os.MkdirAll(Join(dirnames...), 0o755)
 		if err != nil {
 			return err
 		}
@@ -80,13 +81,20 @@ func mkdir(dirnames ...string) error {
 	}
 	return nil
 }
+
+func Mkdir(dirnames ...string) error {
+	dirs := []string{res.dir}
+	dirs = append(dirs, dirnames...)
+	return mkdir(dirs...)
+}
+
 func CreateFile(filename string) error {
 	return create(Join(res.dir, filename))
 }
 
 func write(filename string, content string) error {
 	if _, err := exists(filename); err == nil {
-		file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0644)
+		file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0o644)
 		if err != nil {
 			return err
 		}
@@ -100,9 +108,11 @@ func write(filename string, content string) error {
 	}
 	return nil
 }
+
 func WriteFile(filename string, content string) error {
 	return write(Join(res.dir, filename), content)
 }
+
 func read(filename string) (string, error) {
 	var content string
 	if ok, err := exists(filename); ok && err == nil {
@@ -116,13 +126,16 @@ func read(filename string) (string, error) {
 	}
 	return content, nil
 }
+
 func Join(paths ...string) string {
 	path := []string{}
 	return strings.Join(append(path, paths...), "/")
 }
+
 func ReadFile(filenames ...string) (string, error) {
 	return read(Join(res.dir, Join(filenames...)))
 }
+
 func del(filename string) error {
 	if ok, err := exists(filename); ok && err == nil {
 		err := os.Remove(filename)
@@ -134,13 +147,14 @@ func del(filename string) error {
 	}
 	return nil
 }
+
 func DeleteFile(filename string) error {
 	return del(Join(res.dir, filename))
 }
 
 func extend(filename string, content string) error {
 	if ok, err := exists(filename); ok && err == nil {
-		file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 		if err != nil {
 			return err
 		}
@@ -187,16 +201,13 @@ func readKeys() map[string]KeyFile {
 }
 
 func init() {
-	var exists, err = isDir(res.dir)
+	exists, err := isDir(res.dir)
 	if err != nil {
 		panic(err)
 	}
 	if exists {
-		fmt.Println("dir exists")
 		return
 	}
-	fmt.Println("dir doesn't exists")
-	fmt.Println("creating new one", res.dir)
 	err = mkdir(res.dir)
 	if err != nil {
 		panic(err)

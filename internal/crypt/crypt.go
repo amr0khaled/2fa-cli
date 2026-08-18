@@ -36,22 +36,22 @@ func (base BaseHash) GenSecret() ([]byte, error) {
 	return bytes, nil
 }
 
-func NewSha1() Sha1 {
-	return Sha1{
+func NewSha1() *Sha1 {
+	return &Sha1{
 		BaseHash: BaseHash{
 			Size: 20,
 		},
 	}
 }
-func NewSha256() Sha256 {
-	return Sha256{
+func NewSha256() *Sha256 {
+	return &Sha256{
 		BaseHash: BaseHash{
 			Size: 32,
 		},
 	}
 }
-func NewSha512() Sha512 {
-	return Sha512{
+func NewSha512() *Sha512 {
+	return &Sha512{
 		BaseHash: BaseHash{
 			Size: 64,
 		},

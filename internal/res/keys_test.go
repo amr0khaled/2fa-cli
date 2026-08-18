@@ -24,24 +24,20 @@ func TestNewKeyFromSecret(t *testing.T) {
 }
 
 func TestNewAccount(t *testing.T) {
-
 	pass := "JBSWY3DP"
 	key := NewKey([]byte{}, pass)
 	content := `
 
-	email: test@test.com
 	armour: JBSWY3DP
 	digits: 6
 	`
 	assert.Equal(t, MfaAccount{
 		Name:   "name",
 		key:    key,
-		Email:  "test@test.com",
 		digits: 6,
 	},
 		*NewAccountFromFile("name", content),
 		"reading  Mfa account")
-
 }
 
 func TestNewAccountFromFile(t *testing.T) {
@@ -49,7 +45,6 @@ func TestNewAccountFromFile(t *testing.T) {
 	pass := "JBSWY3DP"
 	key := NewKey([]byte{}, pass)
 	content := `
-email: test@test.com
 armour: JBSWY3DP
 digits: 8
 `
@@ -61,7 +56,6 @@ digits: 8
 	assert.Equal(t, MfaAccount{
 		Name:   "test/key",
 		key:    key,
-		Email:  "test@test.com",
 		digits: 8,
 	},
 		*NewAccountFromFile(name, keyfile.Content),
@@ -70,5 +64,4 @@ digits: 8
 	check(DeleteFile(name + "/.key"))
 	check(DeleteFile(name))
 	check(DeleteFile(strings.Split(name, "/")[0]))
-
 }

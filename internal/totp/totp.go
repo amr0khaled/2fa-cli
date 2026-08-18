@@ -12,8 +12,10 @@ import (
 	"amr.0x/2fa-cli/internal/crypt"
 )
 
-const T0 = 0
-const Interval = 30
+const (
+	T0       = 0
+	Interval = 30
+)
 
 func hexStr2Bytes(hexStr string) ([]byte, error) {
 	if len(hexStr)%2 != 0 {
@@ -67,18 +69,15 @@ func Validate(otp string, secret string) (bool, error) {
 		return false, err
 	}
 	var generatedOTP string
-	err := GenerateOTP(&generatedOTP, hash, secret, digit)
+	bytes, _ := hex.DecodeString(secret)
+	err := GenerateOTP(&generatedOTP, hash, bytes, digit)
 	if err != nil {
 		return false, err
 	}
 	return equalityCheck(otp, string(generatedOTP)), nil
 }
-func GenerateOTP(otp *string, hash crypt.HashMethod, secret string, digit int) error {
-	secretHex, err := hexStr2Bytes(secret)
-	if err != nil {
-		return err
-	}
 
+func GenerateOTP(otp *string, hash crypt.HashMethod, secret []byte, digit int) error {
 	currentTime := time.Now().UTC().Unix()
 	time := (currentTime - T0) / Interval
 	timeStr := strconv.FormatInt(time, 16)
@@ -89,7 +88,7 @@ func GenerateOTP(otp *string, hash crypt.HashMethod, secret string, digit int) e
 	if err != nil {
 		return err
 	}
-	cipher := hash.Hmac(timeHex, secretHex)
+	cipher := hash.Hmac(timeHex, secret)
 	num := truncate(cipher)
 	*otp = prepareOTP(num, digit)
 	return nil

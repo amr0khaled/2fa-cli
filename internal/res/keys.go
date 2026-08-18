@@ -10,30 +10,37 @@ import (
 
 type MfaAccount struct {
 	Name   string
-	Email  string
 	key    *Key
-	digits uint8
+	digits int8
 }
 
-func NewMFaAccount(name string, email string, key *Key) *MfaAccount {
+func NewMFaAccount(name string, key *Key, digits int8) *MfaAccount {
 	return &MfaAccount{
-		Name:  name,
-		Email: email,
-		key:   key,
+		Name:   name,
+		digits: digits,
+		key:    key,
 	}
 }
 
 type MfaAccountInterface interface {
 	GetKey() Key
-	GetDigits() uint8
+	GetDigits() int8
 }
 
 func (m *MfaAccount) GetKey() *Key {
 	return m.key
 }
 
-func (m *MfaAccount) GetDigits() uint8 {
+func (m *MfaAccount) GetDigits() int8 {
 	return m.digits
+}
+
+func (m *MfaAccount) Store() error {
+	content := fmt.Sprintf("armour: %s\ndigits: %d", m.GetKey().armour, m.digits)
+	if err := Mkdir(m.Name); err != nil {
+		return err
+	}
+	return WriteFile(m.Name+"/"+".key", content)
 }
 
 type Key struct {
@@ -43,7 +50,7 @@ type Key struct {
 
 func NewKey(secret []byte, armour ...string) *Key {
 	var base string
-	if !(len(armour) > 0) && !(len(secret) > 0) {
+	if (len(armour) <= 0) && (len(secret) <= 0) {
 		check(errors.New("Must pass an argument to generate a new key"))
 	}
 	if !(len(secret) > 0) {
@@ -52,7 +59,7 @@ func NewKey(secret []byte, armour ...string) *Key {
 		check(err)
 		secret = _secret
 	} else {
-		base = base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(secret)
+		base = base32.StdEncoding.WithPadding(base32.StdPadding).EncodeToString(secret)
 	}
 
 	return &Key{
@@ -130,19 +137,14 @@ func (t *Iter[T]) Items() []T {
 type handler func(account *MfaAccount, iter *Iter[string])
 
 var handlers map[string]handler = map[string]handler{
-	"email":  handleEmail,
 	"digits": handleDigits,
 	"armour": handleArmour,
-}
-
-func handleEmail(account *MfaAccount, iter *Iter[string]) {
-	account.Email = iter.Consume()
 }
 
 func handleDigits(account *MfaAccount, iter *Iter[string]) {
 	num, err := strconv.Atoi(iter.Consume())
 	check(err)
-	account.digits = uint8(num)
+	account.digits = int8(num)
 }
 
 func handleArmour(account *MfaAccount, iter *Iter[string]) {
@@ -151,7 +153,6 @@ func handleArmour(account *MfaAccount, iter *Iter[string]) {
 }
 
 func NewAccountFromFile(name string, content string) *MfaAccount {
-	fmt.Printf("%s\n", content)
 	lines := NewIter(strings.Split(content, "\n"))
 	triming := func(el string) string {
 		return strings.TrimSpace(el)
@@ -190,7 +191,7 @@ func (k *Key) GetRaw() []byte {
 	return k.raw
 }
 
-var accounts []*MfaAccount
+var Accounts = map[string]*MfaAccount{}
 
 func init() {
 	if res == nil {
@@ -199,8 +200,6 @@ func init() {
 	keys := readKeys()
 	for name, key := range keys {
 		account := NewAccountFromFile(name, key.Content)
-		accounts = append(accounts, account)
+		Accounts[name] = account
 	}
-	fmt.Printf("%+vss", accounts)
-
 }
